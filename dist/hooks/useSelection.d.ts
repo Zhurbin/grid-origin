@@ -152,7 +152,7 @@ export interface SelectionResults {
     /**
      * On Selection mousedown
      */
-    onSelectionMouseDown?: (e: React.MouseEvent<HTMLDivElement>, cell: CellInterface | undefined, selection: SelectionArea | undefined, index: number | undefined, shouldClamp?: boolean) => void;
+    onSelectionMouseDown?: (e: React.MouseEvent<HTMLDivElement>, cell: CellInterface | undefined, selection: SelectionArea | undefined, index: number | undefined) => void;
     /**
      * Boolean to indicate if a selection is being dragged
      */
@@ -161,11 +161,6 @@ export interface SelectionResults {
      * Currently dragged selection
      */
     draggedSelection?: SelectionArea;
-    /**
-     * The selection that user selected before beginning
-     * the drag
-     */
-    initialDraggedSelection?: SelectionArea;
 }
 /**
  * Hook to enable selection in datagrid

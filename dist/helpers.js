@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.isArrowKey = exports.castToString = exports.focusableNodeNames = exports.findNextCellInDataRegion = exports.findLastContentfulCell = exports.findNextContentfulCell = exports.clampIndex = exports.isCellWithinBounds = exports.isEqualCells = exports.isNull = exports.autoSizerCanvas = exports.AutoSizerCanvas = exports.canUseDOM = exports.cellRangeToBounds = exports.extendAreaToMergedCells = exports.isAreasEqual = exports.areaInsideArea = exports.areaIntersects = exports.findNextCellWithinBounds = exports.prepareClipboardData = exports.numberToAlphabet = exports.clampCellCoords = exports.newSelectionFromDrag = exports.selectionSpansCells = exports.selectionFromActiveCell = exports.requestTimeout = exports.cancelTimeout = exports.getOffsetForRowAndAlignment = exports.getOffsetForColumnAndAlignment = exports.getOffsetForIndexAndAlignment = exports.rafThrottle = exports.debounce = exports.throttle = exports.cellIdentifier = exports.getEstimatedTotalWidth = exports.getEstimatedTotalHeight = exports.getItemMetadata = exports.getColumnWidth = exports.getRowHeight = exports.getColumnOffset = exports.getRowOffset = exports.itemKey = exports.getBoundedCells = exports.getColumnStopIndexForStartIndex = exports.getColumnStartIndexForOffset = exports.getRowStopIndexForStartIndex = exports.getRowStartIndexForOffset = exports.ItemType = exports.Align = void 0;
+exports.isArrowKey = exports.castToString = exports.focusableNodeNames = exports.findNextCellInDataRegion = exports.findLastContentfulCell = exports.findNextContentfulCell = exports.clampIndex = exports.isEqualCells = exports.isNull = exports.autoSizerCanvas = exports.AutoSizerCanvas = exports.canUseDOM = exports.extendAreaToMergedCells = exports.isAreasEqual = exports.areaInsideArea = exports.areaIntersects = exports.findNextCellWithinBounds = exports.prepareClipboardData = exports.numberToAlphabet = exports.clampCellCoords = exports.newSelectionFromDrag = exports.selectionSpansCells = exports.selectionFromActiveCell = exports.requestTimeout = exports.cancelTimeout = exports.getOffsetForRowAndAlignment = exports.getOffsetForColumnAndAlignment = exports.getOffsetForIndexAndAlignment = exports.rafThrottle = exports.debounce = exports.throttle = exports.cellIdentifier = exports.getEstimatedTotalWidth = exports.getEstimatedTotalHeight = exports.getItemMetadata = exports.getColumnWidth = exports.getRowHeight = exports.getColumnOffset = exports.getRowOffset = exports.itemKey = exports.getBoundedCells = exports.getColumnStopIndexForStartIndex = exports.getColumnStartIndexForOffset = exports.getRowStopIndexForStartIndex = exports.getRowStartIndexForOffset = exports.ItemType = exports.Align = void 0;
 const types_1 = require("./types");
 var Align;
 (function (Align) {
@@ -363,7 +363,7 @@ function rafThrottle(callback) {
     };
 }
 exports.rafThrottle = rafThrottle;
-const getOffsetForIndexAndAlignment = ({ itemType, containerHeight, containerWidth, rowHeight, columnWidth, columnCount, rowCount, index, align = Align.smart, scrollOffset, instanceProps, scrollbarSize, frozenOffset = 0, scale, estimatedTotalHeight, estimatedTotalWidth, }) => {
+const getOffsetForIndexAndAlignment = ({ itemType, containerHeight, containerWidth, rowHeight, columnWidth, columnCount, rowCount, index, align = Align.smart, scrollOffset, instanceProps, scrollbarSize, frozenOffset = 0, scale, }) => {
     const size = itemType === "column" ? containerWidth : containerHeight;
     const itemMetadata = exports.getItemMetadata({
         itemType,
@@ -375,7 +375,9 @@ const getOffsetForIndexAndAlignment = ({ itemType, containerHeight, containerWid
     });
     // Get estimated total size after ItemMetadata is computed,
     // To ensure it reflects actual measurements instead of just estimates.
-    const estimatedTotalSize = itemType === "column" ? estimatedTotalWidth : estimatedTotalHeight;
+    const estimatedTotalSize = itemType === "column"
+        ? exports.getEstimatedTotalWidth(columnCount, instanceProps)
+        : exports.getEstimatedTotalHeight(rowCount, instanceProps);
     const maxOffset = Math.max(0, Math.min(estimatedTotalSize - size, itemMetadata.offset - frozenOffset));
     const minOffset = Math.max(0, itemMetadata.offset - size + scrollbarSize + itemMetadata.size);
     if (align === Align.smart) {
@@ -497,8 +499,8 @@ const newSelectionFromDrag = (initialSelection, from, to, topBound = 0, leftBoun
             top,
             left,
             bottom: top + (currentBounds.bottom - currentBounds.top),
-            right: left + (currentBounds.right - currentBounds.left),
-        },
+            right: left + (currentBounds.right - currentBounds.left)
+        }
     };
 };
 exports.newSelectionFromDrag = newSelectionFromDrag;
@@ -538,7 +540,7 @@ const prepareClipboardData = (rows) => {
     const csv = [];
     const sanitizeCell = (value) => {
         if (exports.isNull(value))
-            return "";
+            return '';
         return value;
     };
     rows.forEach((row) => {
@@ -546,11 +548,8 @@ const prepareClipboardData = (rows) => {
         const csvRow = [];
         row.forEach((cell) => {
             var _a;
-            if (cell[0] === undefined) {
-                return null;
-            }
-            html.push(`<td>${sanitizeCell(cell[0])}</td>`);
-            csvRow.push(`${(_a = exports.castToString(cell[0])) === null || _a === void 0 ? void 0 : _a.replace(/"/g, '""')}`);
+            html.push(`<td>${sanitizeCell(cell)}</td>`);
+            csvRow.push(`${(_a = exports.castToString(cell)) === null || _a === void 0 ? void 0 : _a.replace(/"/g, '""')}`);
         });
         csv.push(csvRow.join(","));
         html.push("</tr>");
@@ -643,10 +642,7 @@ exports.areaIntersects = areaIntersects;
  * @param haystack
  */
 const areaInsideArea = (needle, haystack) => {
-    return (needle.top >= haystack.top &&
-        needle.bottom <= haystack.bottom &&
-        needle.left >= haystack.left &&
-        needle.right <= haystack.right);
+    return needle.top >= haystack.top && needle.bottom <= haystack.bottom && needle.left >= haystack.left && needle.right <= haystack.right;
 };
 exports.areaInsideArea = areaInsideArea;
 /**
@@ -655,9 +651,6 @@ exports.areaInsideArea = areaInsideArea;
  * @param area2
  */
 const isAreasEqual = (area1, area2) => {
-    if (area1 === void 0 || area2 === void 0) {
-        return false;
-    }
     return (area1.bottom === area2.bottom &&
         area1.top === area2.top &&
         area1.left === area2.left &&
@@ -682,55 +675,6 @@ const extendAreaToMergedCells = (_area, mergedCells) => {
     return area;
 };
 exports.extendAreaToMergedCells = extendAreaToMergedCells;
-/**
- * Convert 2 cells to bounds
- * @param start
- * @param end
- * @returns
- *
- * 2 loops O(n)
- */
-const cellRangeToBounds = (start, end, spanMerges = true, getCellBounds) => {
-    let top = Math.min(start.rowIndex, end.rowIndex);
-    let bottom = Math.max(start.rowIndex, end.rowIndex);
-    let left = Math.min(start.columnIndex, end.columnIndex);
-    let right = Math.max(start.columnIndex, end.columnIndex);
-    /**
-     * The idea is that
-     * We do 2 loops >
-     * Left to Right and then top to bottom
-     *  => Find top cell and bottom cell and check
-     * if there are any merged cells at the edge
-     * Then keep extending our top and bottom bounds accordingly
-     *
-     * Same goes for Top to bottom
-     *  => Find left most and right most cells
-     */
-    if (spanMerges) {
-        for (let columnIndex = left; columnIndex <= right; columnIndex++) {
-            const topCell = getCellBounds({ rowIndex: top, columnIndex });
-            const bottomCell = getCellBounds({ rowIndex: bottom, columnIndex });
-            bottom = Math.max(topCell.bottom, bottomCell.bottom, bottom);
-            top = Math.min(topCell.top, bottomCell.top, top);
-        }
-        for (let rowIndex = top; rowIndex <= bottom; rowIndex++) {
-            const topCell = getCellBounds({ rowIndex, columnIndex: left });
-            const bottomCell = getCellBounds({ rowIndex, columnIndex: right });
-            right = Math.max(topCell.right, bottomCell.right, right);
-            left = Math.min(topCell.left, bottomCell.left, left);
-        }
-    }
-    return {
-        top,
-        left,
-        right,
-        bottom,
-    };
-};
-exports.cellRangeToBounds = cellRangeToBounds;
-/**
- * Check if its being rendered in Browser or SSR
- */
 exports.canUseDOM = !!(typeof window !== "undefined" &&
     window.document &&
     window.document.createElement);
@@ -793,21 +737,6 @@ const isEqualCells = (a, b) => {
     return a.rowIndex === b.rowIndex && a.columnIndex === b.columnIndex;
 };
 exports.isEqualCells = isEqualCells;
-/**
- * Simple utility function to check if cell is within bounds
- * @param cell
- * @param bounds
- */
-const isCellWithinBounds = (cell, bounds) => {
-    if (cell.rowIndex < bounds.top || cell.rowIndex > bounds.bottom) {
-        return false;
-    }
-    if (cell.columnIndex < bounds.left || cell.columnIndex > bounds.right) {
-        return false;
-    }
-    return true;
-};
-exports.isCellWithinBounds = isCellWithinBounds;
 const clampIndex = (index, isHidden, direction) => {
     switch (direction) {
         case types_1.Direction.Right:

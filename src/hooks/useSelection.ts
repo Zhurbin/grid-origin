@@ -12,14 +12,15 @@ import {
   Align,
   getBoundedCells,
   cellIdentifier,
+  extendAreaToMergedCells,
   isEqualCells,
   clampIndex,
   HiddenType,
   findNextCellInDataRegion,
+  selectionFromActiveCell,
   selectionSpansCells,
   newSelectionFromDrag,
   clampCellCoords,
-  cellRangeToBounds,
 } from "./../helpers";
 import {
   KeyCodes,
@@ -205,8 +206,7 @@ export interface SelectionResults {
     e: React.MouseEvent<HTMLDivElement>,
     cell: CellInterface | undefined,
     selection: SelectionArea | undefined,
-    index: number | undefined,
-    shouldClamp?: boolean
+    index: number | undefined
   ) => void;
   /**
    * Boolean to indicate if a selection is being dragged
@@ -216,11 +216,6 @@ export interface SelectionResults {
    * Currently dragged selection
    */
   draggedSelection?: SelectionArea;
-  /**
-   * The selection that user selected before beginning
-   * the drag
-   */
-  initialDraggedSelection?: SelectionArea;
 }
 
 const EMPTY_SELECTION: SelectionArea[] = [];
@@ -272,7 +267,6 @@ const useSelection = ({
   /* Drag drop selection */
   const [_, forceRender] = useReducer((s) => s + 1, 0);
   const isDragging = useRef<boolean>(false);
-  const hasUserMovedSelection = useRef<boolean>(false);
   const initialDraggedSelection = useRef<SelectionArea>();
   const initialDraggedCell = useRef<CellInterface>();
   const draggedSelection = useRef<SelectionArea>();
@@ -333,16 +327,24 @@ const useSelection = ({
    * selection object from start, end
    * @param start
    * @param end
+   *
+   * TODO
+   * Cater to Merged cells
    */
   const selectionFromStartEnd = (start: CellInterface, end: CellInterface) => {
     if (!gridRef?.current) return null;
     const spanMerges = canSelectionSpanMergedCells?.(start, end);
-    return cellRangeToBounds(
-      start,
-      end,
-      spanMerges,
-      gridRef.current.getCellBounds
-    );
+    const boundsStart = gridRef.current.getCellBounds(start, spanMerges);
+    const boundsEnd = gridRef.current.getCellBounds(end, spanMerges);
+    const bounds = {
+      top: Math.min(boundsStart.top, boundsEnd.top),
+      bottom: Math.max(boundsStart.bottom, boundsEnd.bottom),
+      left: Math.min(boundsStart.left, boundsEnd.left),
+      right: Math.max(boundsStart.right, boundsEnd.right),
+    };
+    return spanMerges
+      ? extendAreaToMergedCells(bounds, mergedCellsRef.current)
+      : bounds;
   };
 
   /* Modify current selection */
@@ -607,7 +609,8 @@ const useSelection = ({
 
     const coords = gridRef.current.getCellCoordsFromOffset(
       e.clientX,
-      e.clientY
+      e.clientY,
+      false
     );
 
     if (!coords) return;
@@ -1202,9 +1205,6 @@ const useSelection = ({
     gridRef.current.scrollToItem(coords);
   }, []);
 
-  /**
-   * When user releases mouse on the fill handle
-   */
   const handleFillHandleMouseUp = useCallback((e: globalThis.MouseEvent) => {
     isFilling.current = false;
 
@@ -1276,28 +1276,23 @@ const useSelection = ({
       e: React.MouseEvent<HTMLDivElement>,
       activeCell: CellInterface | undefined,
       selection: SelectionArea | undefined,
-      index: number | undefined,
-      shouldClamp: boolean = true
+      index: number | undefined
     ) => {
       if (!gridRef.current) {
         return;
       }
       let coords = gridRef.current.getCellCoordsFromOffset(
         e.nativeEvent.clientX,
-        e.nativeEvent.clientY,
-        false // Todo
+        e.nativeEvent.clientY
       );
       if (!coords) {
         return;
       }
+      /* Make sure the coords do not extend selection bounds */
+      coords = clampCellCoords(coords, activeCell, selection);
+
       /* Initial cell that is selected by user */
       initialDraggedCell.current = coords;
-
-      /* Make sure the coords do not extend selection bounds */
-      if (shouldClamp) {
-        coords = clampCellCoords(coords, activeCell, selection);
-      }
-
       /* Set selection */
       if (activeCell) {
         initialDraggedSelection.current = draggedSelection.current = {
@@ -1329,22 +1324,13 @@ const useSelection = ({
     if (!gridRef?.current) return;
     const coords = gridRef.current.getCellCoordsFromOffset(
       e.clientX,
-      e.clientY
+      e.clientY,
+      false
     );
     if (!coords) {
       return;
     }
     if (!initialDraggedSelection.current || !initialDraggedCell.current) {
-      return;
-    }
-    /**
-     * Skip if user is moving the selection
-     * to the same starting position
-     */
-    if (
-      !hasUserMovedSelection.current &&
-      isEqualCells(initialDraggedCell.current, coords)
-    ) {
       return;
     }
     let sel = newSelectionFromDrag(
@@ -1359,9 +1345,6 @@ const useSelection = ({
     // Not required
     // sel = { bounds : extendAreaToMergedCells(sel.bounds, mergedCellsRef.current) }
     draggedSelection.current = sel;
-
-    // User has now moved the selection,
-    hasUserMovedSelection.current = true;
 
     /* Scroll to the cell */
     gridRef.current?.scrollToItem(coords);
@@ -1411,7 +1394,6 @@ const useSelection = ({
     isDragging.current = false;
     draggedSelection.current = void 0;
     draggedSelectionIndex.current = void 0;
-    hasUserMovedSelection.current = false;
 
     /* Remove event handlers */
     document.removeEventListener("mouseup", handleSelectionMouseUp);
@@ -1426,7 +1408,6 @@ const useSelection = ({
     selections,
     isDragging: isDragging.current,
     draggedSelection: draggedSelection.current,
-    initialDraggedSelection: initialDraggedSelection.current,
     onSelectionMouseDown: handleSelectionMouseDown,
     onMouseDown: handleMouseDown,
     onKeyDown: handleKeyDown,

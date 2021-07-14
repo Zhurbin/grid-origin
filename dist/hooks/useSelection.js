@@ -22,7 +22,6 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
     /* Drag drop selection */
     const [_, forceRender] = react_1.useReducer((s) => s + 1, 0);
     const isDragging = react_1.useRef(false);
-    const hasUserMovedSelection = react_1.useRef(false);
     const initialDraggedSelection = react_1.useRef();
     const initialDraggedCell = react_1.useRef();
     const draggedSelection = react_1.useRef();
@@ -77,12 +76,25 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
      * selection object from start, end
      * @param start
      * @param end
+     *
+     * TODO
+     * Cater to Merged cells
      */
     const selectionFromStartEnd = (start, end) => {
         if (!(gridRef === null || gridRef === void 0 ? void 0 : gridRef.current))
             return null;
         const spanMerges = canSelectionSpanMergedCells === null || canSelectionSpanMergedCells === void 0 ? void 0 : canSelectionSpanMergedCells(start, end);
-        return helpers_1.cellRangeToBounds(start, end, spanMerges, gridRef.current.getCellBounds);
+        const boundsStart = gridRef.current.getCellBounds(start, spanMerges);
+        const boundsEnd = gridRef.current.getCellBounds(end, spanMerges);
+        const bounds = {
+            top: Math.min(boundsStart.top, boundsEnd.top),
+            bottom: Math.max(boundsStart.bottom, boundsEnd.bottom),
+            left: Math.min(boundsStart.left, boundsEnd.left),
+            right: Math.max(boundsStart.right, boundsEnd.right),
+        };
+        return spanMerges
+            ? helpers_1.extendAreaToMergedCells(bounds, mergedCellsRef.current)
+            : bounds;
     };
     /* Modify current selection */
     const modifySelection = (coords, setInProgress) => {
@@ -301,7 +313,7 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
         /* Exit if user is not in selection mode */
         if (!isSelecting.current || !(gridRef === null || gridRef === void 0 ? void 0 : gridRef.current))
             return;
-        const coords = gridRef.current.getCellCoordsFromOffset(e.clientX, e.clientY);
+        const coords = gridRef.current.getCellCoordsFromOffset(e.clientX, e.clientY, false);
         if (!coords)
             return;
         if ((mouseMoveInterceptor === null || mouseMoveInterceptor === void 0 ? void 0 : mouseMoveInterceptor(e, coords, selectionStart, selectionEnd)) === false) {
@@ -783,9 +795,6 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
         setFillSelection({ bounds });
         gridRef.current.scrollToItem(coords);
     }, []);
-    /**
-     * When user releases mouse on the fill handle
-     */
     const handleFillHandleMouseUp = react_1.useCallback((e) => {
         var _a, _b;
         isFilling.current = false;
@@ -844,21 +853,18 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
     /**
      * When user mouse downs on selection
      */
-    const handleSelectionMouseDown = react_1.useCallback((e, activeCell, selection, index, shouldClamp = true) => {
+    const handleSelectionMouseDown = react_1.useCallback((e, activeCell, selection, index) => {
         if (!gridRef.current) {
             return;
         }
-        let coords = gridRef.current.getCellCoordsFromOffset(e.nativeEvent.clientX, e.nativeEvent.clientY, false // Todo
-        );
+        let coords = gridRef.current.getCellCoordsFromOffset(e.nativeEvent.clientX, e.nativeEvent.clientY);
         if (!coords) {
             return;
         }
+        /* Make sure the coords do not extend selection bounds */
+        coords = helpers_1.clampCellCoords(coords, activeCell, selection);
         /* Initial cell that is selected by user */
         initialDraggedCell.current = coords;
-        /* Make sure the coords do not extend selection bounds */
-        if (shouldClamp) {
-            coords = helpers_1.clampCellCoords(coords, activeCell, selection);
-        }
         /* Set selection */
         if (activeCell) {
             initialDraggedSelection.current = draggedSelection.current = {
@@ -884,27 +890,17 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
         var _a;
         if (!(gridRef === null || gridRef === void 0 ? void 0 : gridRef.current))
             return;
-        const coords = gridRef.current.getCellCoordsFromOffset(e.clientX, e.clientY);
+        const coords = gridRef.current.getCellCoordsFromOffset(e.clientX, e.clientY, false);
         if (!coords) {
             return;
         }
         if (!initialDraggedSelection.current || !initialDraggedCell.current) {
             return;
         }
-        /**
-         * Skip if user is moving the selection
-         * to the same starting position
-         */
-        if (!hasUserMovedSelection.current &&
-            helpers_1.isEqualCells(initialDraggedCell.current, coords)) {
-            return;
-        }
         let sel = helpers_1.newSelectionFromDrag(initialDraggedSelection.current, initialDraggedCell.current, coords, selectionTopBound, selectionLeftBound, rowCount, columnCount);
         // Not required
         // sel = { bounds : extendAreaToMergedCells(sel.bounds, mergedCellsRef.current) }
         draggedSelection.current = sel;
-        // User has now moved the selection,
-        hasUserMovedSelection.current = true;
         /* Scroll to the cell */
         (_a = gridRef.current) === null || _a === void 0 ? void 0 : _a.scrollToItem(coords);
         /* Re-render */
@@ -947,7 +943,6 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
         isDragging.current = false;
         draggedSelection.current = void 0;
         draggedSelectionIndex.current = void 0;
-        hasUserMovedSelection.current = false;
         /* Remove event handlers */
         document.removeEventListener("mouseup", handleSelectionMouseUp);
         document.removeEventListener("mousemove", handleSelectionMouseMove);
@@ -959,7 +954,6 @@ const useSelection = ({ gridRef, initialActiveCell = null, initialSelections = E
         selections,
         isDragging: isDragging.current,
         draggedSelection: draggedSelection.current,
-        initialDraggedSelection: initialDraggedSelection.current,
         onSelectionMouseDown: handleSelectionMouseDown,
         onMouseDown: handleMouseDown,
         onKeyDown: handleKeyDown,

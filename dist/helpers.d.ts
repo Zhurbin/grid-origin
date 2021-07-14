@@ -64,10 +64,8 @@ export interface AlignmentProps extends Omit<IItemMetaData, "offset"> {
     scrollOffset: number;
     scrollbarSize: number;
     frozenOffset: number;
-    estimatedTotalHeight: number;
-    estimatedTotalWidth: number;
 }
-export declare const getOffsetForIndexAndAlignment: ({ itemType, containerHeight, containerWidth, rowHeight, columnWidth, columnCount, rowCount, index, align, scrollOffset, instanceProps, scrollbarSize, frozenOffset, scale, estimatedTotalHeight, estimatedTotalWidth, }: AlignmentProps) => number;
+export declare const getOffsetForIndexAndAlignment: ({ itemType, containerHeight, containerWidth, rowHeight, columnWidth, columnCount, rowCount, index, align, scrollOffset, instanceProps, scrollbarSize, frozenOffset, scale, }: AlignmentProps) => number;
 export declare const getOffsetForColumnAndAlignment: (props: Omit<AlignmentProps, "itemType">) => number;
 export declare const getOffsetForRowAndAlignment: (props: Omit<AlignmentProps, "itemType">) => number;
 export declare type TimeoutID = {
@@ -141,30 +139,13 @@ export declare const areaInsideArea: (needle: AreaProps, haystack: AreaProps) =>
  * @param area1
  * @param area2
  */
-export declare const isAreasEqual: (area1: AreaProps | undefined, area2: AreaProps | undefined) => boolean;
+export declare const isAreasEqual: (area1: AreaProps, area2: AreaProps) => boolean;
 /**
  * Get maximum bound of an area, caters to merged cells
  * @param area
  * @param boundGetter
  */
 export declare const extendAreaToMergedCells: (_area: AreaProps, mergedCells: AreaProps[]) => AreaProps;
-/**
- * Convert 2 cells to bounds
- * @param start
- * @param end
- * @returns
- *
- * 2 loops O(n)
- */
-export declare const cellRangeToBounds: (start: CellInterface, end: CellInterface, spanMerges: boolean | undefined, getCellBounds: (cell: CellInterface) => AreaProps) => {
-    top: number;
-    left: number;
-    right: number;
-    bottom: number;
-};
-/**
- * Check if its being rendered in Browser or SSR
- */
 export declare const canUseDOM: boolean;
 /**
  * Simple Canvas element to measure text size
@@ -207,12 +188,6 @@ export declare const autoSizerCanvas: {
 };
 export declare const isNull: (value: any) => boolean;
 export declare const isEqualCells: (a: CellInterface | null, b: CellInterface | null) => boolean;
-/**
- * Simple utility function to check if cell is within bounds
- * @param cell
- * @param bounds
- */
-export declare const isCellWithinBounds: (cell: CellInterface, bounds: AreaProps) => boolean;
 /**
  * Find next row Index
  * @param rowIndex

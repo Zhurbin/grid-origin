@@ -224,16 +224,15 @@ export declare type RefAttribute = {
     ref?: React.Ref<GridRef>;
 };
 export declare type Optional<T, K extends keyof T> = Pick<Partial<T>, K> & Omit<T, K>;
-export interface SelectionProps extends AreaMeta, ShapeConfig, Omit<React.HTMLAttributes<HTMLDivElement>, "draggable"> {
+export interface SelectionProps extends ShapeConfig, Omit<React.HTMLAttributes<HTMLDivElement>, 'draggable'> {
     fillHandleProps?: Record<string, (e: any) => void>;
-    type: "fill" | "activeCell" | "selection" | "border";
+    type: "fill" | "activeCell" | "selection" | 'border';
     isDragging?: boolean;
     inProgress?: boolean;
     activeCell?: CellInterface;
     selection?: SelectionArea;
     key: number;
     draggable?: boolean;
-    bounds?: AreaProps;
     borderCoverWidth?: number;
 }
 export declare type ScrollCoords = {
@@ -338,26 +337,19 @@ export declare type GridRef = {
     getViewPort: () => ViewPortProps;
     getRelativePositionFromOffset: (x: number, y: number) => PosXYRequired | null;
     scrollToTop: () => void;
-    scrollToBottom: () => void;
     getDimensions: () => {
         containerWidth: number;
         containerHeight: number;
         estimatedTotalWidth: number;
         estimatedTotalHeight: number;
     };
-    getRowOffset: (index: number) => number;
-    getColumnOffset: (index: number) => number;
 };
 export declare type MergedCellMap = Map<string, AreaProps>;
 export declare type StylingProps = AreaStyle[];
-export interface AreaStyle extends AreaMeta {
+export interface AreaStyle {
     bounds: AreaProps;
     style?: Style;
-    strokeStyle?: "dashed" | "solid" | "dotted";
-}
-export interface AreaMeta {
-    title?: string;
-    [key: string]: any;
+    strokeStyle?: 'dashed' | 'solid' | 'dotted';
 }
 export interface Style {
     stroke?: string;

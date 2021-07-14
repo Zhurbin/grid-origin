@@ -102,7 +102,7 @@ const useFilter = ({ getFilterComponent = getDefaultFilerComponent, gridRef, wid
         }
         return Array.from(filterValues);
     }, [filterCell, currentFilter]);
-    const filterComponent = isFilterVisible && FilterComponent ? (react_1.default.createElement(FilterComponent, { position: position, width: width, values: values, index: currentFilter === null || currentFilter === void 0 ? void 0 : currentFilter.index, filterView: currentFilter === null || currentFilter === void 0 ? void 0 : currentFilter.filterView, filter: currentFilter === null || currentFilter === void 0 ? void 0 : currentFilter.filter, columnIndex: filterCell === null || filterCell === void 0 ? void 0 : filterCell.columnIndex, rowIndex: filterCell === null || filterCell === void 0 ? void 0 : filterCell.rowIndex, onRequestClose: hideFilter, onRequestShow: handleShowFilter })) : null;
+    const filterComponent = isFilterVisible && FilterComponent ? (react_1.default.createElement(FilterComponent, { position: position, width: width, values: values, index: currentFilter === null || currentFilter === void 0 ? void 0 : currentFilter.index, filterView: currentFilter === null || currentFilter === void 0 ? void 0 : currentFilter.filterView, filter: currentFilter === null || currentFilter === void 0 ? void 0 : currentFilter.filter, columnIndex: filterCell === null || filterCell === void 0 ? void 0 : filterCell.columnIndex })) : null;
     return {
         filterComponent,
         showFilter: handleShowFilter,

@@ -123,40 +123,44 @@ export const createHTMLBox = ({
   isDragging,
   borderCoverWidth = 5,
   type,
-  bounds,
-  activeCell,
   ...props
 }: SelectionProps) => {
   const lineStyles: Partial<React.CSSProperties> = {
     borderWidth: 0,
-    position: "absolute",
-    pointerEvents: "none",
+    position: 'absolute',
+    pointerEvents: 'none'
   };
   /**
    * Border cover is so that there is enough
    * draggable handle area for the user.
    * Default is 5px
    */
-  const showBorderCover = draggable;
+  const showBorderCover = draggable
   const borderCoverStyle: React.CSSProperties = {
-    position: "absolute",
-    pointerEvents: draggable ? "auto" : "none",
-    cursor: draggable ? (isDragging ? "grabbing" : "grab") : "initial",
-  };
+    position: 'absolute',
+    pointerEvents: draggable
+      ? 'auto'
+      : 'none',
+    cursor: draggable
+      ? isDragging
+        ? 'grabbing'
+        : 'grab'
+      : 'initial'
+  }
   width = width - Math.floor(strokeWidth / 2);
   height = height - Math.floor(strokeWidth / 2);
   // y = y - Math.ceil(strokeWidth / 2);
   const lines = [
     <div
-      style={{
-        ...lineStyles,
+      style={{     
+        ...lineStyles,   
         left: x,
         top: y,
         width: width,
         height: strokeTopWidth,
         borderColor: strokeTopColor,
         borderTopWidth: strokeTopWidth,
-        borderStyle: strokeStyle,
+        borderStyle: strokeStyle,        
       }}
       key="top"
       {...props}
@@ -195,7 +199,7 @@ export const createHTMLBox = ({
         left: x,
         top: y,
         width: strokeLeftWidth,
-        height: height,
+        height: height,        
         borderColor: strokeLeftColor,
         borderLeftWidth: strokeLeftWidth,
         borderStyle: strokeStyle,
@@ -206,12 +210,12 @@ export const createHTMLBox = ({
   ];
   const borderCovers = [
     <div
-      style={{
-        ...borderCoverStyle,
+      style={{     
+        ...borderCoverStyle,   
         left: x,
         top: y,
         width: width,
-        height: 5,
+        height: 5,        
       }}
       key="top"
       {...props}
@@ -249,22 +253,9 @@ export const createHTMLBox = ({
       key="left"
       {...props}
     />,
-  ];
-  /**
-   * Display title component
-   * Only if title is not null
-   */
-  const titleProps = {
-    isDragging,
-    x,
-    y,
-    stroke: strokeTopColor,
-    width,
-    bounds,
-    strokeWidth,
-  };
+  ]
   return (
-    <React.Fragment key={key}>
+    <React.Fragment key={key}>      
       {fill && (
         <div
           style={{
@@ -276,7 +267,7 @@ export const createHTMLBox = ({
             backgroundColor: fill,
             opacity: fillOpacity,
             userSelect: "none",
-            pointerEvents: "none",
+            pointerEvents: 'none',
           }}
         />
       )}
@@ -285,3 +276,4 @@ export const createHTMLBox = ({
     </React.Fragment>
   );
 };
+

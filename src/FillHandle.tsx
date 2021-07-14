@@ -23,8 +23,6 @@ const FillHandle: React.FC<ShapeConfig> = ({
         width: size,
         height: size,
         border: `${strokeWidth}px ${borderColor} solid`,
-        borderRightWidth: 0,
-        borderBottomWidth: 0,
         background: stroke,
         cursor: "crosshair",
         pointerEvents: "all",

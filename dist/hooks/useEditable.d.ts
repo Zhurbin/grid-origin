@@ -89,15 +89,7 @@ export interface UseEditableOptions {
      */
     selectionRightBound?: number;
     onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLDivElement>) => void;
-    /**
-     * Sync callback before a cell is edited
-     */
     onBeforeEdit?: (coords: CellInterface) => void;
-    /**
-     * If true, Once the editor is active, it will be always visible.
-     * Editor will not scroll with the grid
-     */
-    sticky?: boolean;
 }
 export interface EditableResults {
     /**
@@ -193,7 +185,7 @@ export interface EditorProps {
     /**
      * Scroll position of the grid
      */
-    scrollPosition: ScrollCoords;
+    scrollPosition?: ScrollCoords;
     /**
      * Next cell that should receive focus
      */
@@ -206,35 +198,10 @@ export interface EditorProps {
      * On keydown event
      */
     onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLDivElement>) => void;
-    /**
-     * Max editor width
-     */
-    maxWidth?: string | number;
-    /**
-     * Max editor height
-     */
-    maxHeight?: string | number;
-    /**
-     * Indicates if the cell is part of frozen row
-     */
-    isFrozenRow?: boolean;
-    /**
-     * Indicates if the cell is part of frozen column
-     */
-    isFrozenColumn?: boolean;
-    /**
-     * Frozen row offset
-     */
-    frozenRowOffset?: number;
-    /**
-     * Frozen column offset
-     */
-    frozenColumnOffset?: number;
 }
-export declare const getDefaultEditor: (cell: CellInterface | null) => React.FC<EditorProps>;
 /**
  * Hook to make grid editable
  * @param param
  */
-declare const useEditable: ({ getEditor, gridRef, getValue, onChange, onSubmit, onCancel, onDelete, selections, activeCell, canEdit, frozenRows, frozenColumns, hideOnBlur, isHiddenRow, isHiddenColumn, rowCount, columnCount, selectionTopBound, selectionBottomBound, selectionLeftBound, selectionRightBound, editorProps, onBeforeEdit, onKeyDown, sticky, }: UseEditableOptions) => EditableResults;
+declare const useEditable: ({ getEditor, gridRef, getValue, onChange, onSubmit, onCancel, onDelete, selections, activeCell, canEdit, frozenRows, frozenColumns, hideOnBlur, isHiddenRow, isHiddenColumn, rowCount, columnCount, selectionTopBound, selectionBottomBound, selectionLeftBound, selectionRightBound, editorProps, onBeforeEdit, onKeyDown, }: UseEditableOptions) => EditableResults;
 export default useEditable;

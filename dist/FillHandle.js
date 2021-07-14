@@ -17,8 +17,6 @@ const FillHandle = ({ x = 0, y = 0, stroke, strokeWidth = 1, size = 8, borderCol
             width: size,
             height: size,
             border: `${strokeWidth}px ${borderColor} solid`,
-            borderRightWidth: 0,
-            borderBottomWidth: 0,
             background: stroke,
             cursor: "crosshair",
             pointerEvents: "all",

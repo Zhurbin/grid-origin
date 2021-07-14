@@ -29,11 +29,11 @@ const createCanvasBox = ({ x = 0, y = 0, width = 0, height = 0, fill, stroke, st
         lines));
 };
 exports.createCanvasBox = createCanvasBox;
-const createHTMLBox = ({ x = 0, y = 0, width = 0, height = 0, fill, stroke, strokeLeftColor = stroke, strokeTopColor = stroke, strokeRightColor = stroke, strokeBottomColor = stroke, strokeWidth = 0, strokeTopWidth = strokeWidth, strokeRightWidth = strokeWidth, strokeBottomWidth = strokeWidth, strokeLeftWidth = strokeWidth, key, strokeStyle = "solid", fillOpacity = 1, draggable, isDragging, borderCoverWidth = 5, type, bounds, activeCell, ...props }) => {
+const createHTMLBox = ({ x = 0, y = 0, width = 0, height = 0, fill, stroke, strokeLeftColor = stroke, strokeTopColor = stroke, strokeRightColor = stroke, strokeBottomColor = stroke, strokeWidth = 0, strokeTopWidth = strokeWidth, strokeRightWidth = strokeWidth, strokeBottomWidth = strokeWidth, strokeLeftWidth = strokeWidth, key, strokeStyle = "solid", fillOpacity = 1, draggable, isDragging, borderCoverWidth = 5, type, ...props }) => {
     const lineStyles = {
         borderWidth: 0,
-        position: "absolute",
-        pointerEvents: "none",
+        position: 'absolute',
+        pointerEvents: 'none'
     };
     /**
      * Border cover is so that there is enough
@@ -42,9 +42,15 @@ const createHTMLBox = ({ x = 0, y = 0, width = 0, height = 0, fill, stroke, stro
      */
     const showBorderCover = draggable;
     const borderCoverStyle = {
-        position: "absolute",
-        pointerEvents: draggable ? "auto" : "none",
-        cursor: draggable ? (isDragging ? "grabbing" : "grab") : "initial",
+        position: 'absolute',
+        pointerEvents: draggable
+            ? 'auto'
+            : 'none',
+        cursor: draggable
+            ? isDragging
+                ? 'grabbing'
+                : 'grab'
+            : 'initial'
     };
     width = width - Math.floor(strokeWidth / 2);
     height = height - Math.floor(strokeWidth / 2);
@@ -121,19 +127,6 @@ const createHTMLBox = ({ x = 0, y = 0, width = 0, height = 0, fill, stroke, stro
                 height: height,
             }, key: "left" }, props)),
     ];
-    /**
-     * Display title component
-     * Only if title is not null
-     */
-    const titleProps = {
-        isDragging,
-        x,
-        y,
-        stroke: strokeTopColor,
-        width,
-        bounds,
-        strokeWidth,
-    };
     return (react_1.default.createElement(react_1.default.Fragment, { key: key },
         fill && (react_1.default.createElement("div", { style: {
                 position: "absolute",
@@ -144,7 +137,7 @@ const createHTMLBox = ({ x = 0, y = 0, width = 0, height = 0, fill, stroke, stro
                 backgroundColor: fill,
                 opacity: fillOpacity,
                 userSelect: "none",
-                pointerEvents: "none",
+                pointerEvents: 'none',
             } })),
         lines,
         showBorderCover && borderCovers));

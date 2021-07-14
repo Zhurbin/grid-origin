@@ -79,10 +79,7 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             getViewPort,
             getRelativePositionFromOffset,
             scrollToTop,
-            scrollToBottom,
             getDimensions,
-            getRowOffset,
-            getColumnOffset,
         };
     });
     const instanceProps = react_1.useRef({
@@ -97,7 +94,6 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
     });
     const stageRef = react_1.useRef(null);
     const containerRef = react_1.useRef(null);
-    const scrollContainerRef = react_1.useRef(null);
     const verticalScrollRef = react_1.useRef(null);
     const wheelingRef = react_1.useRef(null);
     const horizontalScrollRef = react_1.useRef(null);
@@ -115,46 +111,8 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
     /* Focus container */
     const focusContainer = react_1.useCallback(() => {
         var _a;
-        if (helpers_1.canUseDOM && document.activeElement !== containerRef.current) {
-            return (_a = containerRef.current) === null || _a === void 0 ? void 0 : _a.focus();
-        }
+        return (_a = containerRef.current) === null || _a === void 0 ? void 0 : _a.focus();
     }, []);
-    /**
-     * Get top offset of rowIndex
-     */
-    const getRowOffset = react_1.useCallback((index) => {
-        return helpers_1.getRowOffset({
-            index,
-            rowHeight,
-            columnWidth,
-            instanceProps: instanceProps.current,
-            scale,
-        });
-    }, [rowHeight, columnWidth, instanceProps.current, scale]);
-    /**
-     * Get lefft offset of columnIndex
-     */
-    const getColumnOffset = react_1.useCallback((index) => {
-        return helpers_1.getColumnOffset({
-            index,
-            rowHeight,
-            columnWidth,
-            instanceProps: instanceProps.current,
-            scale,
-        });
-    }, [rowHeight, columnWidth, instanceProps.current, scale]);
-    /**
-     * Get height of rowIndex
-     */
-    const getRowHeight = react_1.useCallback((index) => {
-        return helpers_1.getRowHeight(index, instanceProps.current);
-    }, [instanceProps.current]);
-    /**
-     * Get height of columNiondex
-     */
-    const getColumnWidth = react_1.useCallback((index) => {
-        return helpers_1.getColumnWidth(index, instanceProps.current);
-    }, [instanceProps.current]);
     /**
      * onScroll callback
      */
@@ -168,13 +126,13 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
      */
     react_1.useEffect(() => {
         var _a;
-        (_a = scrollContainerRef.current) === null || _a === void 0 ? void 0 : _a.addEventListener("wheel", handleWheel, {
+        (_a = containerRef.current) === null || _a === void 0 ? void 0 : _a.addEventListener("wheel", handleWheel, {
             passive: false,
         });
         isMounted.current = true;
         return () => {
             var _a;
-            (_a = scrollContainerRef.current) === null || _a === void 0 ? void 0 : _a.removeEventListener("wheel", handleWheel);
+            (_a = containerRef.current) === null || _a === void 0 ? void 0 : _a.removeEventListener("wheel", handleWheel);
         };
     }, []);
     /**
@@ -246,9 +204,14 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             columnIndex,
         };
     }, [mergedCellMap]);
-    const frozenColumnWidth = getColumnOffset(frozenColumns);
-    const frozenRowHeight = getRowOffset(frozenRows);
-    const [rowStartIndex, rowStopIndex, visibleRowStartIndex, visibleRowStopIndex,] = react_1.useMemo(() => {
+    const getVerticalRangeToRender = () => {
+        const frozenRowHeight = helpers_1.getRowOffset({
+            index: frozenRows,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         const startIndex = helpers_1.getRowStartIndexForOffset({
             rowHeight,
             columnWidth,
@@ -282,19 +245,15 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             startIndex,
             stopIndex,
         ];
-    }, [
-        rowHeight,
-        columnWidth,
-        rowCount,
-        columnCount,
-        scale,
-        scrollTop,
-        containerHeight,
-        frozenRows,
-        overscanCount,
-        frozenRowHeight,
-    ]);
-    const [columnStartIndex, columnStopIndex, visibleColumnStartIndex, visibleColumnStopIndex,] = react_1.useMemo(() => {
+    };
+    const getHorizontalRangeToRender = () => {
+        const frozenColumnWidth = helpers_1.getColumnOffset({
+            index: frozenColumns,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         const startIndex = helpers_1.getColumnStartIndexForOffset({
             rowHeight,
             columnWidth,
@@ -328,17 +287,9 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             startIndex,
             stopIndex,
         ];
-    }, [
-        rowHeight,
-        columnWidth,
-        rowCount,
-        columnCount,
-        scale,
-        frozenColumns,
-        containerWidth,
-        scrollLeft,
-        frozenColumnWidth,
-    ]);
+    };
+    const [rowStartIndex, rowStopIndex, visibleRowStartIndex, visibleRowStopIndex,] = getVerticalRangeToRender();
+    const [columnStartIndex, columnStopIndex, visibleColumnStartIndex, visibleColumnStopIndex,] = getHorizontalRangeToRender();
     const estimatedTotalHeight = helpers_1.getEstimatedTotalHeight(rowCount, instanceProps.current);
     const estimatedTotalWidth = helpers_1.getEstimatedTotalWidth(columnCount, instanceProps.current);
     /* Method to get dimensions of the grid */
@@ -399,7 +350,7 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 : Math.min(visibleRowStartIndex, rowCount - 1);
             /* Ignore hidden row */
             nextRowIndex = helpers_1.clampIndex(nextRowIndex, isHiddenRow, direction);
-            const rowHeight = getRowHeight(nextRowIndex);
+            const rowHeight = helpers_1.getRowHeight(nextRowIndex, instanceProps.current);
             verticalScrollRef.current.scrollTop +=
                 (direction === types_1.Direction.Up ? -1 : 1) * rowHeight;
         }
@@ -418,7 +369,7 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 : Math.min(visibleColumnStartIndex, columnCount - 1);
             /* Ignore hidden column */
             nextColumnIndex = helpers_1.clampIndex(nextColumnIndex, isHiddenColumn, direction);
-            const columnWidth = getColumnWidth(nextColumnIndex);
+            const columnWidth = helpers_1.getColumnWidth(nextColumnIndex, instanceProps.current);
             horizontalScrollRef.current.scrollLeft +=
                 (direction === types_1.Direction.Left ? -1 : 1) * columnWidth;
         }
@@ -439,6 +390,20 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
         };
     }, [snap]);
     /* Find frozen column boundary */
+    const frozenColumnWidth = helpers_1.getColumnOffset({
+        index: frozenColumns,
+        rowHeight,
+        columnWidth,
+        instanceProps: instanceProps.current,
+        scale,
+    });
+    const frozenRowHeight = helpers_1.getRowOffset({
+        index: frozenRows,
+        rowHeight,
+        columnWidth,
+        instanceProps: instanceProps.current,
+        scale,
+    });
     const isWithinFrozenColumnBoundary = react_1.useCallback((x) => {
         return frozenColumns > 0 && x < frozenColumnWidth;
     }, [frozenColumns, frozenColumnWidth]);
@@ -518,10 +483,34 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
      */
     const getCellOffsetFromCoords = react_1.useCallback((cell) => {
         const { top: rowIndex, left: columnIndex, right, bottom, } = getCellBounds(cell);
-        const x = getColumnOffset(columnIndex);
-        const y = getRowOffset(rowIndex);
-        const width = getColumnOffset(right + 1) - x;
-        const height = getRowOffset(bottom + 1) - y;
+        const x = helpers_1.getColumnOffset({
+            index: columnIndex,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const y = helpers_1.getRowOffset({
+            index: rowIndex,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const width = helpers_1.getColumnOffset({
+            index: right + 1,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) - x;
+        const height = helpers_1.getRowOffset({
+            index: bottom + 1,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) - y;
         return {
             x,
             y,
@@ -651,10 +640,6 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
     const scrollToTop = react_1.useCallback(() => {
         scrollTo({ scrollTop: 0, scrollLeft: 0 });
     }, []);
-    /* Scroll grid to bottom */
-    const scrollToBottom = react_1.useCallback(() => {
-        scrollTo({ scrollTop: estimatedTotalHeight - containerHeight });
-    }, [estimatedTotalHeight, containerHeight]);
     /**
      * Scrollby utility
      */
@@ -680,15 +665,41 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
      * Respects frozen rows and columns
      */
     const scrollToItem = react_1.useCallback(({ rowIndex, columnIndex }, align = helpers_1.Align.smart) => {
-        const isFrozenRow = rowIndex !== void 0 && rowIndex < frozenRows;
-        const isFrozenColumn = columnIndex !== void 0 && columnIndex < frozenColumns;
-        const frozenColumnOffset = getColumnOffset(frozenColumns);
+        const isFrozenRow = rowIndex && rowIndex < frozenRows;
+        const isFrozenColumn = columnIndex && columnIndex < frozenColumns;
+        const frozenColumnOffset = helpers_1.getColumnOffset({
+            index: frozenColumns,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         /* Making sure getColumnWidth works */
-        const x = columnIndex !== void 0 ? getColumnOffset(columnIndex) : void 0;
+        const x = columnIndex
+            ? helpers_1.getColumnOffset({
+                index: columnIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            })
+            : void 0;
         /* Making sure getRowHeight works */
-        const y = rowIndex !== void 0 ? getRowOffset(rowIndex) : void 0;
-        const width = columnIndex !== void 0 ? getColumnWidth(columnIndex) : 0;
-        const height = rowIndex !== void 0 ? getRowHeight(rowIndex) : 0;
+        const y = rowIndex
+            ? helpers_1.getRowOffset({
+                index: rowIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            })
+            : void 0;
+        const width = columnIndex
+            ? helpers_1.getColumnWidth(columnIndex, instanceProps.current)
+            : 0;
+        const height = rowIndex
+            ? helpers_1.getRowHeight(rowIndex, instanceProps.current)
+            : 0;
         const columnAlign = width > containerWidth ? helpers_1.Align.start : align;
         const rowAlign = height > containerHeight ? helpers_1.Align.start : align;
         const newScrollLeft = columnIndex !== void 0 && !isFrozenColumn
@@ -706,11 +717,15 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 frozenOffset: frozenColumnOffset,
                 align: columnAlign,
                 scale,
-                estimatedTotalWidth,
-                estimatedTotalHeight,
             })
             : void 0;
-        const frozenRowOffset = getRowOffset(frozenRows);
+        const frozenRowOffset = helpers_1.getRowOffset({
+            index: frozenRows,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         const newScrollTop = rowIndex !== void 0 && !isFrozenRow
             ? helpers_1.getOffsetForRowAndAlignment({
                 index: rowIndex,
@@ -726,8 +741,6 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 frozenOffset: frozenRowOffset,
                 align: rowAlign,
                 scale,
-                estimatedTotalWidth,
-                estimatedTotalHeight,
             })
             : void 0;
         const coords = {
@@ -750,8 +763,6 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
     }, [
         containerHeight,
         containerWidth,
-        estimatedTotalWidth,
-        estimatedTotalHeight,
         rowCount,
         columnCount,
         scrollbarSize,
@@ -843,9 +854,27 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             /* Ignore frozen rows */
             if (rowIndex < frozenRows || (isHiddenRow === null || isHiddenRow === void 0 ? void 0 : isHiddenRow(rowIndex)))
                 continue;
-            const x1 = getColumnOffset(frozenColumns);
-            const x2 = getColumnOffset(Math.min(columnStopIndex + 1, columnCount));
-            const y1 = getRowOffset(Math.min(rowIndex + 1, rowCount));
+            const x1 = helpers_1.getColumnOffset({
+                index: frozenColumns,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const x2 = helpers_1.getColumnOffset({
+                index: Math.min(columnStopIndex + 1, columnCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const y1 = helpers_1.getRowOffset({
+                index: Math.min(rowIndex + 1, rowCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
             const y2 = y1;
             gridLines.push(gridLineRenderer({
                 points: [x1, y1, x2, y2],
@@ -864,10 +893,28 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
         }
         // Vertical
         for (let columnIndex = columnStartIndex; columnIndex <= columnStopIndex; columnIndex++) {
-            const x1 = getColumnOffset(Math.min(columnIndex + 1, columnCount));
+            const x1 = helpers_1.getColumnOffset({
+                index: Math.min(columnIndex + 1, columnCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
             const x2 = x1;
-            const y1 = getRowOffset(frozenRows);
-            const y2 = getRowOffset(Math.min(rowStopIndex + 1, rowCount));
+            const y1 = helpers_1.getRowOffset({
+                index: frozenRows,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const y2 = helpers_1.getRowOffset({
+                index: Math.min(rowStopIndex + 1, rowCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
             gridLines.push(gridLineRenderer({
                 points: [x1, y1, x2, y2],
                 stroke: gridLineColor,
@@ -887,8 +934,20 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             if (isHiddenRow === null || isHiddenRow === void 0 ? void 0 : isHiddenRow(rowIndex))
                 continue;
             const x1 = 0;
-            const x2 = getColumnOffset(Math.min(columnStopIndex + 1, columnCount));
-            const y1 = getRowOffset(Math.min(rowIndex + 1, rowCount));
+            const x2 = helpers_1.getColumnOffset({
+                index: Math.min(columnStopIndex + 1, columnCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const y1 = helpers_1.getRowOffset({
+                index: Math.min(rowIndex + 1, rowCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
             const y2 = y1;
             gridLinesFrozenRow.push(gridLineRenderer({
                 points: [x1, y1, x2, y2],
@@ -906,10 +965,22 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             }));
         }
         for (let columnIndex = 0; columnIndex < Math.min(columnStopIndex, frozenColumns); columnIndex++) {
-            const x1 = getColumnOffset(Math.min(columnIndex + 1, columnCount));
+            const x1 = helpers_1.getColumnOffset({
+                index: Math.min(columnIndex + 1, columnCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
             const x2 = x1;
             const y1 = 0;
-            const y2 = getRowOffset(Math.min(rowStopIndex + 1, rowCount));
+            const y2 = helpers_1.getRowOffset({
+                index: Math.min(rowStopIndex + 1, rowCount),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
             gridLinesFrozenColumn.push(gridLineRenderer({
                 points: [x1, y1, x2, y2],
                 stroke: gridLineColor,
@@ -968,10 +1039,38 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                     }
                     mergedCellRenderMap.add(cellId);
                 }
-                const y = getRowOffset(actualRowIndex);
-                const height = getRowOffset(actualBottom) - y + getRowHeight(actualBottom);
-                const x = getColumnOffset(actualColumnIndex);
-                const width = getColumnOffset(actualRight) - x + getColumnWidth(actualRight);
+                const y = helpers_1.getRowOffset({
+                    index: actualRowIndex,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
+                const height = helpers_1.getRowOffset({
+                    index: actualBottom,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                }) -
+                    y +
+                    helpers_1.getRowHeight(actualBottom, instanceProps.current);
+                const x = helpers_1.getColumnOffset({
+                    index: actualColumnIndex,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
+                const width = helpers_1.getColumnOffset({
+                    index: actualRight,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                }) -
+                    x +
+                    helpers_1.getColumnWidth(actualRight, instanceProps.current);
                 cells.push(itemRenderer({
                     x,
                     y,
@@ -1016,9 +1115,21 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             isMergedCell({ rowIndex, columnIndex }) || (isHiddenCell === null || isHiddenCell === void 0 ? void 0 : isHiddenCell(rowIndex, columnIndex))) {
             continue;
         }
-        const x = getColumnOffset(columnIndex);
-        const y = getRowOffset(rowIndex);
-        const height = getRowHeight(rowIndex);
+        const x = helpers_1.getColumnOffset({
+            index: columnIndex,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const y = helpers_1.getRowOffset({
+            index: rowIndex,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const height = helpers_1.getRowHeight(rowIndex, instanceProps.current);
         const { x: offsetX = 0 } = getCellOffsetFromCoords({
             rowIndex,
             columnIndex: toColumnIndex + 1,
@@ -1065,10 +1176,38 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 }
                 mergedCellRenderMap.add(cellId);
             }
-            const y = getRowOffset(actualRowIndex);
-            const height = getRowOffset(actualBottom) - y + getRowHeight(actualBottom);
-            const x = getColumnOffset(actualColumnIndex);
-            const width = getColumnOffset(actualRight) - x + getColumnWidth(actualRight);
+            const y = helpers_1.getRowOffset({
+                index: actualRowIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const height = helpers_1.getRowOffset({
+                index: actualBottom,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                y +
+                helpers_1.getRowHeight(actualBottom, instanceProps.current);
+            const x = helpers_1.getColumnOffset({
+                index: actualColumnIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const width = helpers_1.getColumnOffset({
+                index: actualRight,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                x +
+                helpers_1.getColumnWidth(actualRight, instanceProps.current);
             frozenRowCells.push(itemRenderer({
                 x,
                 y,
@@ -1128,10 +1267,38 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 }
                 mergedCellRenderMap.add(cellId);
             }
-            const y = getRowOffset(actualRowIndex);
-            const height = getRowOffset(actualBottom) - y + getRowHeight(actualBottom);
-            const x = getColumnOffset(actualColumnIndex);
-            const width = getColumnOffset(actualRight) - x + getColumnWidth(actualRight);
+            const y = helpers_1.getRowOffset({
+                index: actualRowIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const height = helpers_1.getRowOffset({
+                index: actualBottom,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                y +
+                helpers_1.getRowHeight(actualBottom, instanceProps.current);
+            const x = helpers_1.getColumnOffset({
+                index: actualColumnIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const width = helpers_1.getColumnOffset({
+                index: actualRight,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                x +
+                helpers_1.getColumnWidth(actualRight, instanceProps.current);
             frozenColumnCells.push(itemRenderer({
                 x,
                 y,
@@ -1166,8 +1333,20 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
      * Frozen column shadow
      */
     const frozenColumnShadow = react_1.useMemo(() => {
-        const frozenColumnLineX = getColumnOffset(frozenColumns);
-        const frozenColumnLineY = getRowOffset(Math.min(rowStopIndex + 1, rowCount));
+        const frozenColumnLineX = helpers_1.getColumnOffset({
+            index: frozenColumns,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const frozenColumnLineY = helpers_1.getRowOffset({
+            index: Math.min(rowStopIndex + 1, rowCount),
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         return (react_1.default.createElement(ReactKonvaCore_1.Line, Object.assign({ points: [frozenColumnLineX, 0, frozenColumnLineX, frozenColumnLineY], offsetX: -0.5, strokeWidth: 1, shadowForStrokeEnabled: false, strokeScaleEnabled: false, hitStrokeWidth: 0, listening: false, perfectDrawEnabled: false }, shadowSettings)));
     }, [
         shadowSettings,
@@ -1181,8 +1360,20 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
      * Frozen row shadow
      */
     const frozenRowShadow = react_1.useMemo(() => {
-        const frozenRowLineY = getRowOffset(frozenRows);
-        const frozenRowLineX = getColumnOffset(Math.min(columnStopIndex + 1, columnCount));
+        const frozenRowLineY = helpers_1.getRowOffset({
+            index: frozenRows,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const frozenRowLineX = helpers_1.getColumnOffset({
+            index: Math.min(columnStopIndex + 1, columnCount),
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         return (react_1.default.createElement(ReactKonvaCore_1.Line, Object.assign({ points: [0, frozenRowLineY, frozenRowLineX, frozenRowLineY], offsetY: -0.5, strokeWidth: 1, shadowForStrokeEnabled: false, strokeScaleEnabled: false, hitStrokeWidth: 0, listening: false, perfectDrawEnabled: false }, shadowSettings)));
     }, [
         shadowSettings,
@@ -1215,10 +1406,38 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 }
                 mergedCellRenderMap.add(cellId);
             }
-            const y = getRowOffset(actualRowIndex);
-            const height = getRowOffset(actualBottom) - y + getRowHeight(actualBottom);
-            const x = getColumnOffset(actualColumnIndex);
-            const width = getColumnOffset(actualRight) - x + getColumnWidth(actualRight);
+            const y = helpers_1.getRowOffset({
+                index: actualRowIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const height = helpers_1.getRowOffset({
+                index: actualBottom,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                y +
+                helpers_1.getRowHeight(actualBottom, instanceProps.current);
+            const x = helpers_1.getColumnOffset({
+                index: actualColumnIndex,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            });
+            const width = helpers_1.getColumnOffset({
+                index: actualRight,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                x +
+                helpers_1.getColumnWidth(actualRight, instanceProps.current);
             frozenIntersectionCells.push(itemRenderer({
                 x,
                 y,
@@ -1265,10 +1484,38 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
         const isInFrozenColumn = left < frozenColumns;
         const isInFrozenRow = top < frozenRows;
         const isInFrozenIntersection = isInFrozenRow && isInFrozenColumn;
-        const y = getRowOffset(top);
-        const height = getRowOffset(actualBottom) - y + getRowHeight(actualBottom);
-        const x = getColumnOffset(left);
-        const width = getColumnOffset(actualRight) - x + getColumnWidth(actualRight);
+        const y = helpers_1.getRowOffset({
+            index: top,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const height = helpers_1.getRowOffset({
+            index: actualBottom,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) -
+            y +
+            helpers_1.getRowHeight(actualBottom, instanceProps.current);
+        const x = helpers_1.getColumnOffset({
+            index: left,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const width = helpers_1.getColumnOffset({
+            index: actualRight,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) -
+            x +
+            helpers_1.getColumnWidth(actualRight, instanceProps.current);
         const cell = selectionRenderer({
             stroke: selectionBorderColor,
             strokeWidth: activeCellStrokeWidth,
@@ -1331,26 +1578,57 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             draggable: inProgress ? false : enableSelectionDrag,
             ...style,
         };
-        /**
-         * If selection is in progress,
-         * use this variable to hide fill handle
-         */
-        if (inProgress) {
+        if (inProgress)
             isSelectionInProgress = true;
-        }
-        selectionBounds.y = getRowOffset(top);
+        selectionBounds.y = helpers_1.getRowOffset({
+            index: top,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         selectionBounds.height =
-            getRowOffset(actualBottom) -
+            helpers_1.getRowOffset({
+                index: actualBottom,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
                 selectionBounds.y +
-                getRowHeight(actualBottom);
-        selectionBounds.x = getColumnOffset(left);
+                helpers_1.getRowHeight(actualBottom, instanceProps.current);
+        selectionBounds.x = helpers_1.getColumnOffset({
+            index: left,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
         selectionBounds.width =
-            getColumnOffset(actualRight) -
+            helpers_1.getColumnOffset({
+                index: actualRight,
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
                 selectionBounds.x +
-                getColumnWidth(actualRight);
+                helpers_1.getColumnWidth(actualRight, instanceProps.current);
         if (isLeftBoundFrozen) {
-            const frozenColumnSelectionWidth = getColumnOffset(Math.min(right + 1, frozenColumns)) -
-                getColumnOffset(left);
+            const frozenColumnSelectionWidth = helpers_1.getColumnOffset({
+                index: Math.min(right + 1, frozenColumns),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getColumnOffset({
+                    index: left,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
             selectionAreasFrozenColumns.push(selectionRenderer({
                 ...styles,
                 type: "selection",
@@ -1359,8 +1637,7 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 y: selectionBounds.y,
                 width: frozenColumnSelectionWidth,
                 height: selectionBounds.height,
-                strokeRightWidth: frozenColumnSelectionWidth === selectionBounds.width &&
-                    !isDraggingSelection
+                strokeRightWidth: frozenColumnSelectionWidth === selectionBounds.width && !isDraggingSelection
                     ? selectionStrokeWidth
                     : 0,
                 selection,
@@ -1368,7 +1645,20 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             }));
         }
         if (isTopBoundFrozen) {
-            const frozenRowSelectionHeight = getRowOffset(Math.min(bottom + 1, frozenRows)) - getRowOffset(top);
+            const frozenRowSelectionHeight = helpers_1.getRowOffset({
+                index: Math.min(bottom + 1, frozenRows),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getRowOffset({
+                    index: top,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
             selectionAreasFrozenRows.push(selectionRenderer({
                 ...styles,
                 type: "selection",
@@ -1377,8 +1667,7 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 y: selectionBounds.y,
                 width: selectionBounds.width,
                 height: frozenRowSelectionHeight,
-                strokeBottomWidth: frozenRowSelectionHeight === selectionBounds.height &&
-                    !isDraggingSelection
+                strokeBottomWidth: frozenRowSelectionHeight === selectionBounds.height && !isDraggingSelection
                     ? selectionStrokeWidth
                     : 0,
                 selection,
@@ -1386,9 +1675,34 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             }));
         }
         if (isIntersectionFrozen) {
-            const frozenIntersectionSelectionHeight = getRowOffset(Math.min(bottom + 1, frozenRows)) - getRowOffset(top);
-            const frozenIntersectionSelectionWidth = getColumnOffset(Math.min(right + 1, frozenColumns)) -
-                getColumnOffset(left);
+            const frozenIntersectionSelectionHeight = helpers_1.getRowOffset({
+                index: Math.min(bottom + 1, frozenRows),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getRowOffset({
+                    index: top,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
+            const frozenIntersectionSelectionWidth = helpers_1.getColumnOffset({
+                index: Math.min(right + 1, frozenColumns),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getColumnOffset({
+                    index: left,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
             selectionAreasIntersection.push(selectionRenderer({
                 ...styles,
                 type: "selection",
@@ -1397,12 +1711,10 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
                 y: selectionBounds.y,
                 width: frozenIntersectionSelectionWidth,
                 height: frozenIntersectionSelectionHeight,
-                strokeBottomWidth: frozenIntersectionSelectionHeight === selectionBounds.height &&
-                    !isDraggingSelection
+                strokeBottomWidth: frozenIntersectionSelectionHeight === selectionBounds.height && !isDraggingSelection
                     ? selectionStrokeWidth
                     : 0,
-                strokeRightWidth: frozenIntersectionSelectionWidth === selectionBounds.width &&
-                    !isDraggingSelection
+                strokeRightWidth: frozenIntersectionSelectionWidth === selectionBounds.width && !isDraggingSelection
                     ? selectionStrokeWidth
                     : 0,
                 selection,
@@ -1436,10 +1748,38 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
         const { top, left, right, bottom } = bounds;
         const actualBottom = Math.min(rowStopIndex, bottom);
         const actualRight = Math.min(columnStopIndex, right);
-        const x = getColumnOffset(left);
-        const y = getRowOffset(top);
-        const height = getRowOffset(actualBottom) - y + getRowHeight(actualBottom);
-        const width = getColumnOffset(actualRight) - x + getColumnWidth(actualRight);
+        const x = helpers_1.getColumnOffset({
+            index: left,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const y = helpers_1.getRowOffset({
+            index: top,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const height = helpers_1.getRowOffset({
+            index: actualBottom,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) -
+            y +
+            helpers_1.getRowHeight(actualBottom, instanceProps.current);
+        const width = helpers_1.getColumnOffset({
+            index: actualRight,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) -
+            x +
+            helpers_1.getColumnWidth(actualRight, instanceProps.current);
         fillSelections = selectionRenderer({
             type: "fill",
             x,
@@ -1456,32 +1796,66 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
     const borderStyleCellsFrozenRows = [];
     const borderStyleCellsIntersection = [];
     for (let i = 0; i < borderStyles.length; i++) {
-        const { bounds, style, title, ...rest } = borderStyles[i];
+        const { bounds, style } = borderStyles[i];
         const { top, right, bottom, left } = bounds;
         const isLeftBoundFrozen = left < frozenColumns;
         const isTopBoundFrozen = top < frozenRows;
         const isIntersectionFrozen = top < frozenRows && left < frozenColumns;
-        const x = getColumnOffset(left);
-        const y = getRowOffset(top);
-        const width = getColumnOffset(Math.min(columnCount, right + 1)) - x;
-        const height = getRowOffset(Math.min(rowCount, bottom + 1)) - y;
+        const x = helpers_1.getColumnOffset({
+            index: left,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const y = helpers_1.getRowOffset({
+            index: top,
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        });
+        const width = helpers_1.getColumnOffset({
+            index: Math.min(columnCount, right + 1),
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) - x;
+        const height = helpers_1.getRowOffset({
+            index: Math.min(rowCount, bottom + 1),
+            rowHeight,
+            columnWidth,
+            instanceProps: instanceProps.current,
+            scale,
+        }) - y;
         borderStyleCells.push(utils_1.createHTMLBox({
-            ...rest,
-            ...style,
             x,
             y,
             key: i,
             width,
             height,
-            type: "border",
+            type: 'border',
+            ...style,
         }));
         if (isLeftBoundFrozen) {
-            const frozenColumnSelectionWidth = getColumnOffset(Math.min(right + 1, frozenColumns)) -
-                getColumnOffset(left);
+            const frozenColumnSelectionWidth = helpers_1.getColumnOffset({
+                index: Math.min(right + 1, frozenColumns),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getColumnOffset({
+                    index: left,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
             borderStyleCellsFrozenColumns.push(utils_1.createHTMLBox({
-                ...rest,
                 ...style,
-                type: "border",
+                type: 'border',
                 x,
                 y,
                 key: i,
@@ -1493,11 +1867,23 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             }));
         }
         if (isTopBoundFrozen) {
-            const frozenRowSelectionHeight = getRowOffset(Math.min(bottom + 1, frozenRows)) - getRowOffset(top);
+            const frozenRowSelectionHeight = helpers_1.getRowOffset({
+                index: Math.min(bottom + 1, frozenRows),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getRowOffset({
+                    index: top,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
             borderStyleCellsFrozenRows.push(utils_1.createHTMLBox({
-                ...rest,
                 ...style,
-                type: "border",
+                type: 'border',
                 x,
                 y,
                 key: i,
@@ -1509,13 +1895,37 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             }));
         }
         if (isIntersectionFrozen) {
-            const frozenIntersectionSelectionHeight = getRowOffset(Math.min(bottom + 1, frozenRows)) - getRowOffset(top);
-            const frozenIntersectionSelectionWidth = getColumnOffset(Math.min(right + 1, frozenColumns)) -
-                getColumnOffset(left);
+            const frozenIntersectionSelectionHeight = helpers_1.getRowOffset({
+                index: Math.min(bottom + 1, frozenRows),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getRowOffset({
+                    index: top,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
+            const frozenIntersectionSelectionWidth = helpers_1.getColumnOffset({
+                index: Math.min(right + 1, frozenColumns),
+                rowHeight,
+                columnWidth,
+                instanceProps: instanceProps.current,
+                scale,
+            }) -
+                helpers_1.getColumnOffset({
+                    index: left,
+                    rowHeight,
+                    columnWidth,
+                    instanceProps: instanceProps.current,
+                    scale,
+                });
             borderStyleCellsIntersection.push(utils_1.createHTMLBox({
-                ...rest,
                 ...style,
-                type: "border",
+                type: 'border',
                 x,
                 y,
                 key: i,
@@ -1640,7 +2050,7 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             position: "relative",
             width: containerWidth,
             userSelect: "none",
-        }, className: "rowsncolumns-grid", ref: scrollContainerRef },
+        }, className: "rowsncolumns-grid" },
         react_1.default.createElement("div", Object.assign({ className: "rowsncolumns-grid-container", tabIndex: 0, ref: containerRef }, rest),
             react_1.default.createElement(ReactKonvaCore_1.Stage, Object.assign({ width: containerWidth, height: containerHeight, ref: stageRef, listening: listenToEvents }, stageProps), wrapper(stageChildren))),
         selectionChildren,

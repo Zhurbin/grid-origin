@@ -5,4 +5,4 @@ import { SelectionProps } from "./Grid";
  * @param param0
  */
 export declare const createCanvasBox: ({ x, y, width, height, fill, stroke, strokeLeftColor, strokeTopColor, strokeRightColor, strokeBottomColor, strokeWidth, strokeTopWidth, strokeRightWidth, strokeBottomWidth, strokeLeftWidth, dash, dashEnabled, lineCap, key, }: ShapeConfig) => JSX.Element;
-export declare const createHTMLBox: ({ x, y, width, height, fill, stroke, strokeLeftColor, strokeTopColor, strokeRightColor, strokeBottomColor, strokeWidth, strokeTopWidth, strokeRightWidth, strokeBottomWidth, strokeLeftWidth, key, strokeStyle, fillOpacity, draggable, isDragging, borderCoverWidth, type, bounds, activeCell, ...props }: SelectionProps) => JSX.Element;
+export declare const createHTMLBox: ({ x, y, width, height, fill, stroke, strokeLeftColor, strokeTopColor, strokeRightColor, strokeBottomColor, strokeWidth, strokeTopWidth, strokeRightWidth, strokeBottomWidth, strokeLeftWidth, key, strokeStyle, fillOpacity, draggable, isDragging, borderCoverWidth, type, ...props }: SelectionProps) => JSX.Element;

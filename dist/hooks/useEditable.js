@@ -19,7 +19,6 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getDefaultEditor = void 0;
 const react_1 = __importStar(require("react"));
 const types_1 = require("./../types");
 const helpers_1 = require("../helpers");
@@ -28,14 +27,15 @@ const helpers_1 = require("../helpers");
  * @param props
  */
 const DefaultEditor = (props) => {
-    const { onChange, onSubmit, onCancel, position, cell, nextFocusableCell, value = "", activeCell, autoFocus = true, onKeyDown, selections, scrollPosition, maxWidth, maxHeight, isFrozenRow, isFrozenColumn, frozenRowOffset, frozenColumnOffset, ...rest } = props;
+    const { onChange, onSubmit, onCancel, position, cell, nextFocusableCell, value = "", activeCell, autoFocus = true, onKeyDown, ...rest } = props;
     const borderWidth = 2;
     const padding = 10; /* 2 + 1 + 1 + 2 + 2 */
+    const textSizer = react_1.useRef(helpers_1.autoSizerCanvas);
     const inputRef = react_1.useRef(null);
     const { x = 0, y = 0, width = 0, height = 0 } = position;
     const getWidth = react_1.useCallback((text) => {
         var _a;
-        const textWidth = ((_a = helpers_1.autoSizerCanvas.measureText(text)) === null || _a === void 0 ? void 0 : _a.width) || 0;
+        const textWidth = ((_a = textSizer.current.measureText(text)) === null || _a === void 0 ? void 0 : _a.width) || 0;
         return Math.max(textWidth + padding, width + borderWidth / 2);
     }, [width]);
     react_1.useEffect(() => {
@@ -101,15 +101,13 @@ const DefaultEditor = (props) => {
             } }, rest))));
 };
 const getDefaultEditor = (cell) => DefaultEditor;
-exports.getDefaultEditor = getDefaultEditor;
 const defaultCanEdit = (cell) => true;
 const defaultIsHidden = (i) => false;
 /**
  * Hook to make grid editable
  * @param param
  */
-const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, onChange, onSubmit, onCancel, onDelete, selections = [], activeCell, canEdit = defaultCanEdit, frozenRows = 0, frozenColumns = 0, hideOnBlur = true, isHiddenRow = defaultIsHidden, isHiddenColumn = defaultIsHidden, rowCount, columnCount, selectionTopBound = 0, selectionBottomBound = rowCount - 1, selectionLeftBound = 0, selectionRightBound = columnCount - 1, editorProps, onBeforeEdit, onKeyDown, sticky = false, }) => {
-    var _a, _b, _c, _d, _e, _f;
+const useEditable = ({ getEditor = getDefaultEditor, gridRef, getValue, onChange, onSubmit, onCancel, onDelete, selections = [], activeCell, canEdit = defaultCanEdit, frozenRows = 0, frozenColumns = 0, hideOnBlur = true, isHiddenRow = defaultIsHidden, isHiddenColumn = defaultIsHidden, rowCount, columnCount, selectionTopBound = 0, selectionBottomBound = rowCount - 1, selectionLeftBound = 0, selectionRightBound = columnCount - 1, editorProps, onBeforeEdit, onKeyDown, }) => {
     const [isEditorShown, setShowEditor] = react_1.useState(false);
     const [value, setValue] = react_1.useState("");
     const [position, setPosition] = react_1.useState({
@@ -128,7 +126,6 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
     const isDirtyRef = react_1.useRef(false);
     const currentValueRef = react_1.useRef(value);
     const initialValueRef = react_1.useRef();
-    const maxEditorDimensionsRef = react_1.useRef();
     /* To prevent stale closures data */
     const getValueRef = react_1.useRef(getValue);
     const showEditor = react_1.useCallback(() => setShowEditor(true), []);
@@ -153,15 +150,14 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
      * @param initialValue
      */
     const makeEditable = react_1.useCallback((coords, initialValue, autoFocus = true) => {
-        var _a, _b, _c;
+        var _a;
         if (!gridRef.current)
             return;
         /* Get actual coords for merged cells */
         coords = gridRef.current.getActualCellCoords(coords);
         /* Check if its the same cell */
-        if (helpers_1.isEqualCells(coords, currentActiveCellRef.current)) {
+        if (helpers_1.isEqualCells(coords, currentActiveCellRef.current))
             return;
-        }
         /* Call on before edit */
         if (canEdit(coords)) {
             /* Let user modify coords before edit */
@@ -174,21 +170,6 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
             const scrollPosition = gridRef.current.getScrollPosition();
             const cellValue = getValueRef.current(coords);
             const value = initialValue || cellValue || "";
-            const cellPosition = sticky
-                ? // Editor is rendered outside the <Grid /> component
-                    // If the user has scrolled down, and then activate the editor, we will need to adjust the position
-                    // of the sticky editor accordingly
-                    // Subsequent scroll events has no effect, cos of sticky option
-                    getCellPosition(pos, scrollPosition)
-                : pos;
-            /**
-             * Set max editor ref based on grid container
-             */
-            const { containerWidth, containerHeight, } = gridRef.current.getDimensions();
-            maxEditorDimensionsRef.current = {
-                height: containerHeight - ((_b = cellPosition.y) !== null && _b !== void 0 ? _b : 0),
-                width: containerWidth - ((_c = cellPosition.x) !== null && _c !== void 0 ? _c : 0),
-            };
             /**
              * If the user has entered a value in the cell, mark it as dirty
              * So that during mousedown, onSubmit gets called
@@ -199,24 +180,21 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
             setValue(value);
             onChange === null || onChange === void 0 ? void 0 : onChange(value, coords);
             setAutoFocus(autoFocus);
-            setScrollPosition(scrollPosition);
-            setPosition(cellPosition);
+            setPosition(getCellPosition(pos, scrollPosition));
             showEditor();
         }
-    }, [frozenRows, frozenColumns, onBeforeEdit, canEdit, sticky]);
-    /* Frozen flags */
-    const isFrozenRow = currentActiveCellRef.current &&
-        ((_a = currentActiveCellRef.current) === null || _a === void 0 ? void 0 : _a.rowIndex) < frozenRows;
-    const isFrozenColumn = currentActiveCellRef.current &&
-        ((_b = currentActiveCellRef.current) === null || _b === void 0 ? void 0 : _b.columnIndex) < frozenColumns;
+    }, [frozenRows, frozenColumns, onBeforeEdit, canEdit]);
     /**
      * Get current cell position based on scroll position
      * @param position
      * @param scrollPosition
      */
     const getCellPosition = (position, scrollPosition) => {
+        var _a, _b;
         if (!currentActiveCellRef.current)
             return { x: 0, y: 0 };
+        const isFrozenRow = ((_a = currentActiveCellRef.current) === null || _a === void 0 ? void 0 : _a.rowIndex) < frozenRows;
+        const isFrozenColumn = ((_b = currentActiveCellRef.current) === null || _b === void 0 ? void 0 : _b.columnIndex) < frozenColumns;
         return {
             ...position,
             x: position.x -
@@ -288,7 +266,7 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
         makeEditable({ rowIndex, columnIndex }, initialValue);
         /* Prevent the first keystroke */
         e.preventDefault();
-    }, [getValue, selections, activeCell, onDelete]);
+    }, [getValue, selections, activeCell]);
     /**
      * Get next focusable cell
      * Respects selection bounds
@@ -358,7 +336,7 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
         selectionTopBound,
     ]);
     /* Save the value */
-    const handleSubmit = react_1.useCallback((value, activeCell, nextActiveCell) => {
+    const handleSubmit = (value, activeCell, nextActiveCell) => {
         /**
          * Hide the editor first, so that we can handle onBlur events
          * 1. Editor hides -> Submit
@@ -369,14 +347,7 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
         onSubmit && onSubmit(value, activeCell, nextActiveCell);
         /* Keep the focus */
         focusGrid();
-    }, [onSubmit]);
-    /* When the input is blurred out */
-    const handleCancel = react_1.useCallback((e) => {
-        hideEditor();
-        onCancel && onCancel(e);
-        /* Keep the focus back in the grid */
-        focusGrid();
-    }, [onCancel]);
+    };
     const handleMouseDown = react_1.useCallback((e) => {
         /* Persistent input, hides only during Enter key or during submit or cancel calls */
         if (!hideOnBlur) {
@@ -391,7 +362,7 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
             }
         }
         initialActiveCell.current = undefined;
-    }, [hideOnBlur, handleSubmit, handleCancel]);
+    }, [hideOnBlur]);
     const handleChange = react_1.useCallback((newValue, activeCell) => {
         /**
          * Make sure we dont call onChange if initialValue is set
@@ -410,6 +381,13 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
         setValue(newValue);
         onChange === null || onChange === void 0 ? void 0 : onChange(newValue, activeCell);
     }, [value]);
+    /* When the input is blurred out */
+    const handleCancel = (e) => {
+        hideEditor();
+        onCancel && onCancel(e);
+        /* Keep the focus back in the grid */
+        focusGrid();
+    };
     const handleScroll = react_1.useCallback((scrollPos) => {
         if (!currentActiveCellRef.current)
             return;
@@ -419,7 +397,7 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
     const editingCell = currentActiveCellRef.current;
     const Editor = react_1.useMemo(() => {
         return editingCell
-            ? getEditor(editingCell) || exports.getDefaultEditor(editingCell)
+            ? getEditor(editingCell) || getDefaultEditor(editingCell)
             : null;
     }, [editingCell]);
     const handleBlur = react_1.useCallback((e) => {
@@ -428,30 +406,9 @@ const useEditable = ({ getEditor = exports.getDefaultEditor, gridRef, getValue, 
             focusGrid();
         }
     }, []);
-    const finalCellPosition = react_1.useMemo(() => {
-        /**
-         * Since the editor is sticky,
-         * we dont need to adjust the position,
-         * as scrollposition wont move the editor
-         *
-         * When the editor is first active, in makeEditable,
-         * we accomodate for the initial scrollPosition
-         */
-        if (sticky) {
-            return position;
-        }
-        /**
-         * If editor is not sticky, keep adjusting
-         * its position to accomodate for scroll
-         */
-        return getCellPosition(position, scrollPosition);
-    }, [sticky, position, scrollPosition, frozenColumns, frozenRows]);
-    /* Get offset of frozen rows and columns */
-    const frozenRowOffset = (_c = gridRef.current) === null || _c === void 0 ? void 0 : _c.getRowOffset(frozenRows);
-    const frozenColumnOffset = (_d = gridRef.current) === null || _d === void 0 ? void 0 : _d.getColumnOffset(frozenColumns);
     const editorComponent = isEditorShown && Editor ? (react_1.default.createElement(Editor, Object.assign({}, editorProps === null || editorProps === void 0 ? void 0 : editorProps(), { 
         /* This is the cell that is currently being edited */
-        cell: editingCell, activeCell: activeCell, autoFocus: autoFocus, value: value, selections: selections, onChange: handleChange, onSubmit: handleSubmit, onCancel: handleCancel, position: finalCellPosition, scrollPosition: scrollPosition, nextFocusableCell: nextFocusableCell, onBlur: handleBlur, onKeyDown: onKeyDown, maxWidth: (_e = maxEditorDimensionsRef.current) === null || _e === void 0 ? void 0 : _e.width, maxHeight: (_f = maxEditorDimensionsRef.current) === null || _f === void 0 ? void 0 : _f.height, isFrozenRow: isFrozenRow, isFrozenColumn: isFrozenColumn, frozenRowOffset: frozenRowOffset, frozenColumnOffset: frozenColumnOffset }))) : null;
+        cell: editingCell, activeCell: activeCell, autoFocus: autoFocus, value: value, selections: selections, onChange: handleChange, onSubmit: handleSubmit, onCancel: handleCancel, position: position, scrollPosition: scrollPosition, nextFocusableCell: nextFocusableCell, onBlur: handleBlur, onKeyDown: onKeyDown }))) : null;
     return {
         editorComponent,
         onDoubleClick: handleDoubleClick,
