@@ -756,8 +756,11 @@ export const prepareClipboardData = (
     html.push("<tr>");
     const csvRow: string[] = [];
     row.forEach((cell) => {
-      html.push(`<td>${sanitizeCell(cell)}</td>`);
-      csvRow.push(`${castToString(cell)?.replace(/"/g, '""')}`);
+      if (cell![0] === undefined) {
+        return null;
+      }
+      html.push(`<td>${sanitizeCell(cell![0])}</td>`);
+      csvRow.push(`${castToString(cell![0])?.replace(/"/g, '""')}`);
     });
     csv.push(csvRow.join(","));
     html.push("</tr>");
