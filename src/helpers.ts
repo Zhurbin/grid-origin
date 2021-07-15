@@ -756,13 +756,11 @@ export const prepareClipboardData = (
     html.push("<tr>");
     const csvRow: string[] = [];
     row.forEach((cell) => {
-      if (cell![0] === undefined) {
-        return null;
-      }
       html.push(`<td>${sanitizeCell(cell![0])}</td>`);
-      csvRow.push(`${castToString(cell![0])?.replace(/"/g, '""')}`);
+      const cleanCsvValue = cell![0] === undefined ? '' : cell![0];
+      csvRow.push(`${castToString(cleanCsvValue)?.replace(/"/g, '""')}`);
     });
-    csv.push(csvRow.join(","));
+    csv.push(csvRow.join("\t"));
     html.push("</tr>");
   });
   html.push("</table>");
