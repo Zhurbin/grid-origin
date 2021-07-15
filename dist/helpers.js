@@ -548,8 +548,14 @@ const prepareClipboardData = (rows) => {
         const csvRow = [];
         row.forEach((cell) => {
             var _a;
-            html.push(`<td>${sanitizeCell(cell[0])}</td>`);
-            const cleanCsvValue = cell[0] === undefined ? '' : cell[0];
+            const cellText = cell ? Object.keys(cell).reduce((acc, key) => {
+                if (key === "sourceCell") {
+                    return acc;
+                }
+                return acc + cell[key];
+            }, '') : cell;
+            html.push(`<td>${sanitizeCell(cellText)}</td>`);
+            const cleanCsvValue = cellText === undefined ? '' : cellText;
             csvRow.push(`${(_a = exports.castToString(cleanCsvValue)) === null || _a === void 0 ? void 0 : _a.replace(/"/g, '""')}`);
         });
         csv.push(csvRow.join("\t"));
