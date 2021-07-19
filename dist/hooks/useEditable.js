@@ -53,19 +53,18 @@ const DefaultEditor = (props) => {
     }, []);
     const inputHeight = height;
     return (react_1.default.createElement("div", { style: {
-            top: y - borderWidth / 2,
+            top: y,
             left: x,
             position: "absolute",
             width: inputWidth,
-            height: inputHeight + borderWidth,
-            padding: borderWidth,
-            boxShadow: "0 2px 6px 2px rgba(60,64,67,.15)",
-            border: "2px #1a73e8 solid",
+            height: inputHeight + 1,
+            padding: '8px 16px',
+            border: "1px rgb(21, 171, 215) solid",
             background: "white",
         } },
         react_1.default.createElement("textarea", Object.assign({ rows: 1, cols: 1, ref: inputRef, value: value, style: {
-                font: "12px Arial",
                 lineHeight: 1.2,
+                fontSize: '14px',
                 width: "100%",
                 height: "100%",
                 padding: "0 1px",
@@ -77,6 +76,8 @@ const DefaultEditor = (props) => {
                 overflow: "hidden",
                 verticalAlign: "top",
                 background: "transparent",
+                textAlign: "right",
+                color: '#4a4a49',
             }, onChange: (e) => {
                 onChange === null || onChange === void 0 ? void 0 : onChange(e.target.value, cell);
             }, onKeyDown: (e) => {

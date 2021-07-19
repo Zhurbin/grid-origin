@@ -305,14 +305,13 @@ const DefaultEditor: React.FC<EditorProps> = (props) => {
   return (
     <div
       style={{
-        top: y - borderWidth / 2,
+        top: y,
         left: x,
         position: "absolute",
         width: inputWidth,
-        height: inputHeight + borderWidth,
-        padding: borderWidth,
-        boxShadow: "0 2px 6px 2px rgba(60,64,67,.15)",
-        border: "2px #1a73e8 solid",
+        height: inputHeight + 1,
+        padding: '8px 16px',
+        border: "1px rgb(21, 171, 215) solid",
         background: "white",
       }}
     >
@@ -322,8 +321,8 @@ const DefaultEditor: React.FC<EditorProps> = (props) => {
         ref={inputRef}
         value={value}
         style={{
-          font: "12px Arial",
           lineHeight: 1.2,
+          fontSize: '14px',
           width: "100%",
           height: "100%",
           padding: "0 1px",
@@ -335,6 +334,8 @@ const DefaultEditor: React.FC<EditorProps> = (props) => {
           overflow: "hidden",
           verticalAlign: "top",
           background: "transparent",
+          textAlign: "right",
+          color: '#4a4a49',
         }}
         onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
           onChange?.(e.target.value, cell);
