@@ -134,6 +134,7 @@ export interface EditableResults {
    * Double click listener, activates the grid
    */
   onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+  onTouchStart: (e: React.TouchEvent<HTMLDivElement>) => void;
   /**
    * OnScroll listener to align the editor
    */
@@ -532,11 +533,13 @@ const useEditable = ({
 
   /* Activate edit mode */
   const handleDoubleClick = useCallback(
-    (e: React.MouseEvent<HTMLElement>) => {
+    (e: any) => {
       if (!gridRef.current) return;
+      const clientX = e?.touches?.[0]?.clientX || e.nativeEvent.clientX;
+      const clientY = e?.touches?.[0]?.clientY || e.nativeEvent.clientY;
       const coords = gridRef.current.getCellCoordsFromOffset(
-        e.nativeEvent.clientX,
-        e.nativeEvent.clientY
+        clientX,
+        clientY
       );
       if (!coords) return;
       const { rowIndex, columnIndex } = coords;
@@ -835,6 +838,7 @@ const useEditable = ({
   return {
     editorComponent,
     onDoubleClick: handleDoubleClick,
+    onTouchStart: handleDoubleClick,
     onKeyDown: handleKeyDown,
     nextFocusableCell,
     isEditInProgress: !!editingCell,

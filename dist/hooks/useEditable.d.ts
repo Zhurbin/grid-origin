@@ -100,6 +100,7 @@ export interface EditableResults {
      * Double click listener, activates the grid
      */
     onDoubleClick: (e: React.MouseEvent<HTMLDivElement>) => void;
+    onTouchStart: (e: React.TouchEvent<HTMLDivElement>) => void;
     /**
      * OnScroll listener to align the editor
      */

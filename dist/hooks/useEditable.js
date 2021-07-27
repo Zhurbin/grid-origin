@@ -205,9 +205,12 @@ const useEditable = ({ getEditor = getDefaultEditor, gridRef, getValue, onChange
     };
     /* Activate edit mode */
     const handleDoubleClick = react_1.useCallback((e) => {
+        var _a, _b, _c, _d;
         if (!gridRef.current)
             return;
-        const coords = gridRef.current.getCellCoordsFromOffset(e.nativeEvent.clientX, e.nativeEvent.clientY);
+        const clientX = ((_b = (_a = e === null || e === void 0 ? void 0 : e.touches) === null || _a === void 0 ? void 0 : _a[0]) === null || _b === void 0 ? void 0 : _b.clientX) || e.nativeEvent.clientX;
+        const clientY = ((_d = (_c = e === null || e === void 0 ? void 0 : e.touches) === null || _c === void 0 ? void 0 : _c[0]) === null || _d === void 0 ? void 0 : _d.clientY) || e.nativeEvent.clientY;
+        const coords = gridRef.current.getCellCoordsFromOffset(clientX, clientY);
         if (!coords)
             return;
         const { rowIndex, columnIndex } = coords;
@@ -421,6 +424,7 @@ const useEditable = ({ getEditor = getDefaultEditor, gridRef, getValue, onChange
     return {
         editorComponent,
         onDoubleClick: handleDoubleClick,
+        onTouchStart: handleDoubleClick,
         onKeyDown: handleKeyDown,
         nextFocusableCell,
         isEditInProgress: !!editingCell,
