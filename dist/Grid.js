@@ -2051,7 +2051,9 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
             width: containerWidth,
             userSelect: "none",
         }, className: "rowsncolumns-grid" },
-        react_1.default.createElement("div", Object.assign({ className: "rowsncolumns-grid-container", tabIndex: 0, ref: containerRef }, rest),
+        react_1.default.createElement("div", Object.assign({ className: "rowsncolumns-grid-container", tabIndex: 0, ref: containerRef, style: {
+                outline: "none",
+            } }, rest),
             react_1.default.createElement(ReactKonvaCore_1.Stage, Object.assign({ width: containerWidth, height: containerHeight, ref: stageRef, listening: listenToEvents }, stageProps), wrapper(stageChildren))),
         selectionChildren,
         showScrollbar ? (react_1.default.createElement(react_1.default.Fragment, null,

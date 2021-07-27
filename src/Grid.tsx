@@ -2988,6 +2988,9 @@ const Grid: React.FC<GridProps & RefAttribute> = memo(
           className="rowsncolumns-grid-container"
           tabIndex={0}
           ref={containerRef}
+          style={{
+            outline: "none",
+          }}
           {...rest}
         >
           <Stage

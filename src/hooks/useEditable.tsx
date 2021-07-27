@@ -607,7 +607,11 @@ const useEditable = ({
           ? undefined
           : e.nativeEvent.key;
 
-      makeEditable({ rowIndex, columnIndex }, initialValue);
+      if (e.which < 48 || e.which > 57) {
+          makeEditable({ rowIndex, columnIndex }, undefined);
+      } else {
+          makeEditable({ rowIndex, columnIndex }, initialValue);
+      }
 
       /* Prevent the first keystroke */
       e.preventDefault();
@@ -755,6 +759,9 @@ const useEditable = ({
 
   const handleChange = useCallback(
     (newValue: string, activeCell) => {
+      if (Number.isNaN(Number(newValue.toString().replace(',', '.')))) {
+        return;
+      }
       /**
        * Make sure we dont call onChange if initialValue is set
        * This is to accomodate for editor that fire onChange during initialvalue
