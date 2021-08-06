@@ -215,7 +215,7 @@ const useCopyPaste = ({
       const values = value.split("\n");
       for (const val of values) {
         const row = [];
-        for (const cell of val.split(",")) {
+        for (const cell of val.split("\t")) {
           row.push(cell.replace(/^\"|\"$/gi, ""));
         }
         rows.push(row);
@@ -250,7 +250,7 @@ const useCopyPaste = ({
     gridRef.current.focus();
     const text = await navigator.clipboard.readText();
     const clipboardData = new DataTransfer();
-    clipboardData.setData(MimeType.plain, text);
+    clipboardData.setData(MimeType.csv, text);
     const event = new ClipboardEvent("paste", { clipboardData });
     handlePaste(event);
   }, []);
