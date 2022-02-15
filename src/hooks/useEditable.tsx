@@ -610,11 +610,18 @@ const useEditable = ({
           ? undefined
           : e.nativeEvent.key;
 
-      if (e.which < 48 || e.which > 57) {
-          makeEditable({ rowIndex, columnIndex }, undefined);
+      // For digits use key value
+      console.log('e.which', e.which);
+      if ((e.which >= 48 && e.which <= 57) || (e.which >= 96 && e.which <= 105)) {
+        makeEditable({ rowIndex, columnIndex }, initialValue);
       } else {
-          makeEditable({ rowIndex, columnIndex }, initialValue);
+        makeEditable({ rowIndex, columnIndex }, undefined);
       }
+      // if (e.which < 48 || e.which > 57) {
+      //     makeEditable({ rowIndex, columnIndex }, undefined);
+      // } else {
+      //     makeEditable({ rowIndex, columnIndex }, initialValue);
+      // }
 
       /* Prevent the first keystroke */
       e.preventDefault();
