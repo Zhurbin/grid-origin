@@ -778,9 +778,15 @@ const Grid = react_1.memo(react_1.forwardRef((props, forwardedRef) => {
         var _a, _b, _c, _d;
         /* If user presses shift key, scroll horizontally */
         const isScrollingHorizontally = event.shiftKey;
-        /* Prevent browser back in Mac */
-        event.preventDefault();
         const { deltaX, deltaY, deltaMode } = event;
+        const elementScrollTopPosition = verticalScrollRef.current ? verticalScrollRef.current.scrollTop : null;
+        const endOfScroll = verticalScrollRef.current ? verticalScrollRef.current.scrollHeight - verticalScrollRef.current.offsetHeight : null;
+        const isEndOfTopScrolling = deltaY < 0 && elementScrollTopPosition === 0;
+        const isEndOfBottomScrolling = deltaY > 0 && elementScrollTopPosition === endOfScroll;
+        if (!(isEndOfTopScrolling || isEndOfBottomScrolling)) {
+            /* Prevent browser back in Mac */
+            event.preventDefault();
+        }
         /* Scroll natively */
         if (wheelingRef.current)
             return;
